@@ -79,10 +79,6 @@ RUN if [[ ${SPARK_PACKAGE} != *"-preview"* ]]; then \
 # Install Ray.
 # Updating to 1.7.0 to pass ray tests
 RUN pip install --no-cache-dir ray==1.7.0
-# This installs protobuf>=3.15.3 where tensorflow 2.5.1 seems to need 3.9.2, otherwise we get:
-# [libprotobuf FATAL google/protobuf/stubs/common.cc:83] This program was compiled against version 3.9.2 of the Protocol Buffer runtime library, which is not compatible with the installed version (3.19.1).  Contact the program author for an update.  If you compiled the program yourself, make sure that your headers are from the same version of Protocol Buffers as your link-time library.  (Version verification failed in "bazel-out/k8-opt/bin/tensorflow/core/framework/tensor_shape.pb.cc".)
-# This breaks test_spark_lightning.py (only tested with CPU)
-RUN if [[ ${TENSORFLOW_PACKAGE} == tensorflow*==2.5.* ]]; then pip uninstall -y protobuf; fi
 
 # Install MPI.
 RUN if [[ ${MPI_KIND} == "OpenMPI" ]]; then \
@@ -229,6 +225,11 @@ RUN if [[ ${MPI_KIND} == "ONECCL" ]]; then \
     cd /horovod && \
     python setup.py sdist && \
     bash -c "${HOROVOD_BUILD_FLAGS} HOROVOD_WITH_TENSORFLOW=1 HOROVOD_WITH_PYTORCH=1 HOROVOD_WITH_MXNET=1 pip install --no-cache-dir -v $(ls /horovod/dist/horovod-*.tar.gz)[spark,ray]"
+
+# For tensorflow==2.5.1 specifically, we see this error:
+# [libprotobuf FATAL google/protobuf/stubs/common.cc:83] This program was compiled against version 3.9.2 of the Protocol Buffer runtime library, which is not compatible with the installed version (3.19.1).  Contact the program author for an update.  If you compiled the program yourself, make sure that your headers are from the same version of Protocol Buffers as your link-time library.  (Version verification failed in "bazel-out/k8-opt/bin/tensorflow/core/framework/tensor_shape.pb.cc".)
+# This used to work before 3.19.1 was released, it breaks test_spark_lightning.py (only tested with CPU)
+RUN if [[ ${TENSORFLOW_PACKAGE} == tensorflow*==2.5.* ]]; then pip install --force "protobuf>=3.9.2,<3.19.2"; fi
 
 # Show the effective python package version to easily spot version differences
 RUN pip freeze | sort

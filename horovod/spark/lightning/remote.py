@@ -24,7 +24,7 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning import Trainer, Callback
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
-from pytorch_lightning.loggers import TensorBoardLogger, CometLogger
+from pytorch_lightning.loggers import CSVLogger, CometLogger
 
 from horovod.spark.common import constants
 from horovod.spark.common.util import _get_assigned_gpu_or_default
@@ -111,8 +111,8 @@ def RemoteTrainer(estimator, metadata, ckpt_bytes, run_id, dataset_idx, train_ro
 
             if logger is None:
                 # Use default logger if no logger is supplied
-                train_logger = TensorBoardLogger(logs_path)
-                print(f"Setup logger: Using TensorBoardLogger: {train_logger}")
+                train_logger = CSVLogger(logs_path)
+                print(f"Setup logger: Using CSVLogger: {train_logger}")
 
             elif isinstance(logger, CometLogger) and logger._experiment_key is None:
                 # Resume logger experiment key if passed correctly from CPU.

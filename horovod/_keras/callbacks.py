@@ -87,6 +87,7 @@ class MetricAverageCallbackImpl(object):
         # for other callbacks to use.
         for metric, value in reduced_logs.items():
             logs[metric] = value
+        logs["worker_size"] = hvd.size()
 
     def on_epoch_end(self, epoch, logs=None):
         self._average_metrics_in_place(logs)
@@ -176,7 +177,6 @@ class LearningRateScheduleCallbackImpl(object):
             # Log current learning rate.
             logs['lr'] = self.backend.get_value(self.model.optimizer.lr)
 
-
 class LearningRateWarmupCallbackImpl(LearningRateScheduleCallbackImpl):
     def __init__(self, backend, initial_lr, warmup_epochs=5, momentum_correction=True, steps_per_epoch=None,
                  verbose=0, *args):
@@ -194,7 +194,8 @@ class LearningRateWarmupCallbackImpl(LearningRateScheduleCallbackImpl):
     def on_epoch_end(self, epoch, logs=None):
         super(LearningRateWarmupCallbackImpl, self).on_epoch_end(epoch, logs)
 
-        if epoch == self.end_epoch - 1 and self.verbose > 0 and hvd.rank() == 0:
+        if self.verbose > 0 and hvd.rank() == 0:
             new_lr = self.backend.get_value(self.model.optimizer.lr)
-            print('\nEpoch %d: finished gradual learning rate warmup to %g.' %
-                  (epoch + 1, new_lr))
+            print('\nEpoch %d: finished gradual learning rate warmup to %g worker size:%d.' %
+                  (epoch + 1, new_lr, hvd.size()))
+

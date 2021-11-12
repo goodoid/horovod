@@ -59,7 +59,7 @@ def resnet50_model(classes=1000, *args, **kwargs):
     print()
     print(model.summary(), '\n')
     # Compile the model
-    model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.adam(lr=0.01, clipnorm=0.001),
+    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.adam(lr=0.01, clipnorm=0.001),
                   metrics=['accuracy'])
     # Return a model
     return model

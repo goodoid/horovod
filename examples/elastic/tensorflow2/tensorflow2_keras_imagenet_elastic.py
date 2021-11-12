@@ -195,8 +195,8 @@ test_iter = test_gen.flow_from_directory(args.val_dir,
                                          target_size=(img_width, img_height))
 
 # Set up standard ResNet-50 model.
-model = keras.applications.resnet50.ResNet50(classes=10)
-#model = resnet50_model(10)
+#model = keras.applications.resnet50.ResNet50(classes=10)
+model = resnet50_model(10)
 
 # Horovod: (optional) compression algorithm.
 compression = hvd.Compression.fp16 if args.fp16_allreduce else hvd.Compression.none

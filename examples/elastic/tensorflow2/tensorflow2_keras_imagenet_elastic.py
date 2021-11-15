@@ -16,7 +16,7 @@ from tensorflow.compat.v1.keras import backend as K
 from tensorflow.keras.preprocessing import image
 import tensorflow as tf
 import tensorflow.keras as keras
-import horovod.keras as hvd
+import horovod.tensorflow.keras as hvd
 import os
 
 

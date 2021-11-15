@@ -15,8 +15,8 @@
 
 import warnings
 
-import keras
-import keras.backend as K
+import tensorflow.keras as keras
+from tensorflow.keras import backend as K
 
 from horovod.tensorflow import init
 from horovod.tensorflow import shutdown

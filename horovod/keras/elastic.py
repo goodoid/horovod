@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-import keras
+import tensorflow.keras as keras
 
 from horovod._keras import elastic as _impl
 from horovod.tensorflow.elastic import TensorFlowKerasState, run

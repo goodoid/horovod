@@ -268,6 +268,7 @@ def train():
               validation_data=test_iter,
               validation_steps=3 * len(test_iter) // hvd.size())
 
+train()
 # Evaluate the model on the full data set.
 score = hvd.allreduce(model.evaluate_generator(test_iter, len(test_iter), workers=4))
 if verbose:

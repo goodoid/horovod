@@ -12,7 +12,7 @@
 # https://github.com/KaimingHe/deep-residual-networks.
 #
 import argparse
-from tensorflow.keras import backend as K
+from tensorflow.compat.v1.keras import backend as K
 from tensorflow.keras.preprocessing import image
 import tensorflow as tf
 import tensorflow.keras as keras

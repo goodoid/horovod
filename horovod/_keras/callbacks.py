@@ -177,6 +177,8 @@ class LearningRateScheduleCallbackImpl(object):
             # Log current learning rate.
             logs['lr'] = self.backend.get_value(self.model.optimizer.lr)
 
+
+
 class LearningRateWarmupCallbackImpl(LearningRateScheduleCallbackImpl):
     def __init__(self, backend, initial_lr, warmup_epochs=5, momentum_correction=True, steps_per_epoch=None,
                  verbose=0, *args):

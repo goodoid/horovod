@@ -15,6 +15,7 @@
 
 from tensorflow import keras
 from tensorflow.python.keras import backend as K
+import horovod.tensorflow as hvd
 
 from horovod._keras import callbacks as _impl
 
@@ -61,6 +62,28 @@ class MetricAverageCallback(_impl.MetricAverageCallbackImpl, keras.callbacks.Cal
                     if Horovod was build with HOROVOD_GPU_OPERATIONS.
         """
         super(MetricAverageCallback, self).__init__(K, device)
+
+
+class ElasticLogCallback(_impl.LearningRateWarmupCallbackImpl, keras.callbacks.Callback):
+    def __init__(self, initial_lr, multiplier, start_epoch=0, end_epoch=None, staircase=True,
+                 momentum_correction=True, steps_per_epoch=None):
+        super(LearningRateScheduleCallback, self).__init__(K, initial_lr, multiplier, start_epoch, end_epoch,
+                                                       staircase, momentum_correction, steps_per_epoch)
+
+    def on_train_begin(self, logs=None):
+        pass
+
+    def on_epoch_begin(self, epoch, logs=None):
+        pass
+
+    def on_batch_begin(self, batch, logs=None):
+        pass
+
+    def on_batch_end(self, batch, logs=None):
+        pass
+
+    def on_epoch_end(self, epoch, logs=None):
+        print('current learning rate:{} worker count:{}'.format(self.backend.get_value(self.model.optimizer.lr), hvd.size()))
 
 
 class LearningRateScheduleCallback(_impl.LearningRateScheduleCallbackImpl, keras.callbacks.Callback):

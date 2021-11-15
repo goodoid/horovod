@@ -160,7 +160,7 @@ for try_epoch in range(args.epochs, 0, -1):
         resume_from_epoch = try_epoch
         break
 
-# Horovod: broadcast resume_from_epoch from rank 0 (which will have
+# Horovod: broadcast resume_frovisible_device_listm_epoch from rank 0 (which will have
 # checkpoints) to other ranks.
 resume_from_epoch = hvd.broadcast(resume_from_epoch, 0, name='resume_from_epoch')
 
@@ -242,9 +242,22 @@ def on_state_reset():
 state.register_reset_callbacks([on_state_reset])
 
 callbacks = [
+    hvd.callbacks.BroadcastGlobalVariablesCallback(0),
+    hvd.callbacks.MetricAverageCallback(),
     hvd.elastic.UpdateEpochStateCallback(state),
     hvd.elastic.UpdateBatchStateCallback(state),
     hvd.elastic.CommitStateCallback(state),
+    hvd.callbacks.LearningRateWarmupCallback(initial_lr=initial_lr,
+                                             warmup_epochs=args.warmup_epochs,
+                                             verbose=verbose),
+    hvd.callbacks.LearningRateScheduleCallback(initial_lr=initial_lr,
+                                               multiplier=1.,
+                                               start_epoch=args.warmup_epochs,
+                                               end_epoch=30),
+    hvd.callbacks.LearningRateScheduleCallback(initial_lr=initial_lr, multiplier=1e-1, start_epoch=30, end_epoch=60),
+    hvd.callbacks.LearningRateScheduleCallback(initial_lr=initial_lr, multiplier=1e-2, start_epoch=60, end_epoch=80),
+    hvd.callbacks.LearningRateScheduleCallback(initial_lr=initial_lr, multiplier=1e-3, start_epoch=80),
+    hvd.callbacks.ElasticLogCallback(initial_lr=initial_lr, multiplier=1., start_epoch=args.warmup_epochs, end_epoch=args.epochs),
 ]
 
 # Horovod: save checkpoints only on the first worker to prevent other workers from corrupting them.
@@ -267,7 +280,6 @@ def train(state):
               initial_epoch=resume_from_epoch,
               validation_data=test_iter,
               validation_steps=3 * len(test_iter) // hvd.size())
-    state.commit()
 
 def on_state_reset():
     opt.lr.assign(args.base_lr * hvd.size())

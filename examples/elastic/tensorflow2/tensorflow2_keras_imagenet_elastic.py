@@ -12,14 +12,12 @@
 # https://github.com/KaimingHe/deep-residual-networks.
 #
 import argparse
-import keras
 from tensorflow.compat.v1.keras import backend as K
-from keras.preprocessing import image
+from tensorflow.keras.preprocessing import image
 import tensorflow as tf
+import tensorflow.keras as keras
 import horovod.keras as hvd
 import os
-import pickle
-import numpy as np
 
 
 # Get a ResNet50 model

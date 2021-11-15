@@ -257,7 +257,7 @@ if hvd.rank() == 0:
 # Over-sampling of validation data helps to increase probability that every validation
 # example will be evaluated.
 @hvd.elastic.run
-def train():
+def train(state):
     model.fit(train_iter,
               steps_per_epoch=len(train_iter) // hvd.size(),
               callbacks=callbacks,
@@ -267,8 +267,16 @@ def train():
               initial_epoch=resume_from_epoch,
               validation_data=test_iter,
               validation_steps=3 * len(test_iter) // hvd.size())
+    state.commit()
 
-train()
+def on_state_reset():
+    opt.lr.assign(args.base_lr * hvd.size())
+
+
+state = hvd.elastic.TensorFlowKerasState(model, opt, batch=0)
+state.register_reset_callbacks([on_state_reset])
+
+train(state)
 # Evaluate the model on the full data set.
 score = hvd.allreduce(model.evaluate_generator(test_iter, len(test_iter), workers=4))
 if verbose:

@@ -233,10 +233,11 @@ else:
                   metrics=['accuracy', 'top_k_categorical_accuracy'])
 
 model.fit(train_iter, steps_per_epoch=1, epochs=1, callbacks=None)
+state = hvd.elastic.TensorFlowKerasState(model, opt, batch=0)
 def on_state_reset():
     opt.lr.assign(args.base_lr * hvd.size())
+    state.model.fit(train_iter, steps_per_epoch=1, epochs=1, callbacks=None)
 
-state = hvd.elastic.TensorFlowKerasState(model, opt, batch=0)
 state.register_reset_callbacks([on_state_reset])
 
 callbacks = [
@@ -269,7 +270,7 @@ if hvd.rank() == 0:
 # example will be evaluated.
 @hvd.elastic.run
 def train(state):
-    model.fit(train_iter,
+    state.model.fit(train_iter,
               steps_per_epoch=len(train_iter) // hvd.size(),
               callbacks=callbacks,
               epochs=args.epochs,
@@ -284,5 +285,5 @@ train(state)
 # Evaluate the model on the full data set.
 score = hvd.allreduce(model.evaluate_generator(test_iter, len(test_iter), workers=4))
 if verbose:
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1])
+    print('-----------Test loss:', score[0])
+    print('-----------Test accuracy:', score[1])

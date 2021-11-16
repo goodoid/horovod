@@ -233,12 +233,10 @@ else:
                   metrics=['accuracy', 'top_k_categorical_accuracy'])
 
 model.fit(train_iter, steps_per_epoch=1, epochs=1, callbacks=None)
-state = hvd.elastic.KerasState(model, batch=0, epoch=0)
 def on_state_reset():
-    tf.keras.backend.set_value(state.model.optimizer.lr,  0.001 * hvd.size())
-    # Re-initialize, to join with possible new ranks
-    state.model.fit(train_iter, steps_per_epoch=1, epochs=1, callbacks=None)
+    opt.lr.assign(args.base_lr * hvd.size())
 
+state = hvd.elastic.TensorFlowKerasState(model, opt, batch=0)
 state.register_reset_callbacks([on_state_reset])
 
 callbacks = [
@@ -246,7 +244,7 @@ callbacks = [
     hvd.callbacks.MetricAverageCallback(),
     hvd.elastic.UpdateEpochStateCallback(state),
     hvd.elastic.UpdateBatchStateCallback(state),
-    hvd.elastic.CommitStateCallback(state),
+    #hvd.elastic.CommitStateCallback(state),
     hvd.callbacks.LearningRateWarmupCallback(initial_lr=initial_lr,
                                              warmup_epochs=args.warmup_epochs,
                                              verbose=verbose),
@@ -280,13 +278,7 @@ def train(state):
               initial_epoch=resume_from_epoch,
               validation_data=test_iter,
               validation_steps=3 * len(test_iter) // hvd.size())
-
-def on_state_reset():
-    opt.lr.assign(args.base_lr * hvd.size())
-
-
-state = hvd.elastic.TensorFlowKerasState(model, opt, batch=0)
-state.register_reset_callbacks([on_state_reset])
+    state.check_host_updates()
 
 train(state)
 # Evaluate the model on the full data set.

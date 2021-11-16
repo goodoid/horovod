@@ -67,8 +67,8 @@ class MetricAverageCallback(_impl.MetricAverageCallbackImpl, keras.callbacks.Cal
 class ElasticLogCallback(_impl.LearningRateWarmupCallbackImpl, keras.callbacks.Callback):
     def __init__(self, initial_lr, multiplier, start_epoch=0, end_epoch=None, staircase=True,
                  momentum_correction=True, steps_per_epoch=None):
-        super(LearningRateScheduleCallback, self).__init__(K, initial_lr, multiplier, start_epoch, end_epoch,
-                                                       staircase, momentum_correction, steps_per_epoch)
+        super(ElasticLogCallback, self).__init__(K, initial_lr, multiplier, start_epoch, end_epoch,
+                                                 staircase, momentum_correction, steps_per_epoch)
 
     def on_train_begin(self, logs=None):
         pass

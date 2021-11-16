@@ -243,8 +243,8 @@ state.register_reset_callbacks([on_state_reset])
 callbacks = [
     hvd.callbacks.BroadcastGlobalVariablesCallback(0),
     hvd.callbacks.MetricAverageCallback(),
-    hvd.elastic.UpdateEpochStateCallback(state),
-    hvd.elastic.UpdateBatchStateCallback(state),
+    #hvd.elastic.UpdateEpochStateCallback(state),
+    #hvd.elastic.UpdateBatchStateCallback(state),
     #hvd.elastic.CommitStateCallback(state),
     hvd.callbacks.LearningRateWarmupCallback(initial_lr=initial_lr,
                                              warmup_epochs=args.warmup_epochs,

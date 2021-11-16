@@ -144,6 +144,9 @@ args = parser.parse_args()
 
 
 print("got args:", args)
+with os.open("horovod.git-commit") as f:
+    print("horovod git commit:", f.readlines())
+
 # Horovod: initialize Horovod.
 hvd.init()
 

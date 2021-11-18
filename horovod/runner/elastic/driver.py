@@ -185,7 +185,7 @@ class ElasticDriver(object):
             try:
                 update_res = self._host_manager.update_available_hosts()
                 if update_res != HostUpdateResult.no_update:
-                    print("host updated, current:{}, update_res:{}".format(self._host_manager.current_hosts.available_hosts(), update_res))
+                    print("host updated, current:{}, update_res:{}".format(self._host_manager.current_hosts.available_hosts, update_res))
                     self._notify_workers_host_changes(self._host_manager.current_hosts, update_res)
                     self._wait_hosts_cond.notify_all()
             except RuntimeError as e:

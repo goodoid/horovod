@@ -82,7 +82,7 @@ def train(state):
         loss_value = training_step(images, labels)
 
         if state.batch % 10 == 0 and hvd.local_rank() == 0:
-            print('Step #%d\tLoss: %.6f' % (state.batch, loss_value))
+            print('Step #%d\tLoss: %.6f worker size:{}' % (state.batch, loss_value, hvd.size()))
 
         # Horovod: commit state at the end of each batch
         state.commit()

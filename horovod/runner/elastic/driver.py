@@ -219,7 +219,7 @@ class ElasticDriver(object):
 
         coordinator_client = self.get_worker_client(coordinator_slot_info)
         if not coordinator_client:
-            logging.debug('no coordinator client, skipping notifications')
+            logging.info('no coordinator client, skipping notifications')
             return
 
         timestamp = _epoch_time_s()

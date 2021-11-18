@@ -216,6 +216,7 @@ class BasicClient(object):
         return result
 
     def _probe_one(self, intf, addr, result_queue):
+        print("notify addr:", addr)
         for iter in range(self._attempts):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(self._probe_timeout)

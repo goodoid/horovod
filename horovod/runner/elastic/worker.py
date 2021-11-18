@@ -116,4 +116,5 @@ class WorkerNotificationClient(network.BasicClient):
                                                        match_intf=match_intf)
 
     def notify_hosts_updated(self, timestamp, update_res):
+        print("notify host updated")
         self._send(HostsUpdatedRequest(timestamp, update_res))

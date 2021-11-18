@@ -209,17 +209,17 @@ class ElasticDriver(object):
 
         if next_host_assignments == self.host_assignments:
             # Skip notifying workers when host changes would not result in changes of host assignments
-            logging.debug('no host assignment changes, skipping notifications')
+            print('no host assignment changes, skipping notifications')
             return
 
         coordinator_slot_info = self.get_coordinator_info()
         if not coordinator_slot_info:
-            logging.debug('no coordinator info, skipping notifications')
+            print('no coordinator info, skipping notifications')
             return
 
         coordinator_client = self.get_worker_client(coordinator_slot_info)
         if not coordinator_client:
-            logging.info('no coordinator client, skipping notifications')
+            print('no coordinator client, skipping notifications')
             return
 
         timestamp = _epoch_time_s()

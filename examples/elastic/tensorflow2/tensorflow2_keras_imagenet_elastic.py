@@ -239,7 +239,7 @@ model.fit(train_iter, steps_per_epoch=1, epochs=1, callbacks=None)
 state = hvd.elastic.TensorFlowKerasState(model, opt, batch=0)
 def on_state_reset():
     opt.lr.assign(state.model.optimizer.lr,  0.001 * hvd.size())
-    state.model.fit(dataset, steps_per_epoch=1, epochs=1, callbacks=None)
+    state.model.fit(train_iter, steps_per_epoch=1, epochs=1, callbacks=None)
 
 state.register_reset_callbacks([on_state_reset])
 
@@ -278,7 +278,7 @@ def train(state):
               callbacks=callbacks,
               epochs=args.epochs,
               verbose=verbose,
-              workers=4,
+              workers=hvd.size(),
               initial_epoch=resume_from_epoch,
               validation_data=test_iter,
               validation_steps=3 * len(test_iter) // hvd.size())

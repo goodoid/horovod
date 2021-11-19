@@ -258,8 +258,10 @@ if __name__ == '__main__':
                                  transforms.RandomHorizontalFlip(),
                                  transforms.ToTensor(),
                                  transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                      std=[0.229, 0.224, 0.225])
-                             ]))
+                                                      std=[0.229, 0.224, 0.225]),
+                             ]),
+                             is_valid_file=lambda x: True if x.startswith("train-") else False,
+                             )
     # Elastic Horovod: use ElasticSampler to partition data among workers.
     train_sampler = hvd.elastic.ElasticSampler(train_dataset)
     train_loader = torch.utils.data.DataLoader(
@@ -276,7 +278,9 @@ if __name__ == '__main__':
                                  transforms.ToTensor(),
                                  transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                       std=[0.229, 0.224, 0.225])
-                             ]))
+                             ]),
+                             is_valid_file=lambda x: True if x.startswith("validation-") else False,
+                             )
     val_sampler = hvd.elastic.ElasticSampler(val_dataset)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,

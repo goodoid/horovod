@@ -74,6 +74,7 @@ def train(state):
     epoch = state.epoch
     train_loss = Metric('train_loss')
     train_accuracy = Metric('train_accuracy')
+    train_top5_accuracy = Metric('train_top5_accuracy')
 
     batch_offset = state.batch
     with tqdm(total=len(train_loader),
@@ -101,7 +102,10 @@ def train(state):
                 data_batch = data[i:i + args.batch_size]
                 target_batch = target[i:i + args.batch_size]
                 output = model(data_batch)
-                train_accuracy.update(accuracy(output, target_batch))
+                train_topk_acc = accuracy_topk(output, target_batch, (1, 5))
+                #train_accuracy.update(accuracy(output, target_batch))
+                train_accuracy.update(train_topk_acc[0])
+                train_top5_accuracy.update(train_topk_acc[0])
                 loss = F.cross_entropy(output, target_batch)
                 train_loss.update(loss)
                 # Average gradients among sub-batches
@@ -115,13 +119,16 @@ def train(state):
             # Gradient is applied across all ranks
             optimizer.step()
             t.set_postfix({'loss': train_loss.avg.item(),
-                           'accuracy': 100. * train_accuracy.avg.item()})
+                           'accuracy': train_accuracy.avg.item(),
+                           'accuracy_top5': train_top5_accuracy.avg.item()
+                           })
 
             t.update(1)
 
     if log_writer:
         log_writer.add_scalar('train/loss', train_loss.avg, epoch)
         log_writer.add_scalar('train/accuracy', train_accuracy.avg, epoch)
+        log_writer.add_scalar('train/accuracy_top5', train_top5_accuracy.avg, epoch)
 
     state.commit()
 
@@ -171,7 +178,23 @@ def adjust_learning_rate(epoch, batch_idx):
         param_group['lr'] = args.base_lr * hvd.size() * args.batches_per_allreduce * lr_adj
 
 
-def accuracy(output, target):
+def accuracy_topk(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append(correct_k.mul_(100.0 / batch_size))
+    return res
+
+
+def accuracy(output, target, topK=1):
     # get the index of the max log-probability
     pred = output.max(1, keepdim=True)[1]
     return pred.eq(target.view_as(pred)).cpu().float().mean()

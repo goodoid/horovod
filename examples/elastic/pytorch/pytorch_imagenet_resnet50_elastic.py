@@ -105,7 +105,7 @@ def train(state):
                 train_topk_acc = accuracy_topk(output, target_batch, (1, 5))
                 #train_accuracy.update(accuracy(output, target_batch))
                 train_accuracy.update(train_topk_acc[0])
-                train_top5_accuracy.update(train_topk_acc[0])
+                train_top5_accuracy.update(train_topk_acc[1])
                 loss = F.cross_entropy(output, target_batch)
                 train_loss.update(loss)
                 # Average gradients among sub-batches
@@ -137,6 +137,7 @@ def validate(epoch):
     model.eval()
     val_loss = Metric('val_loss')
     val_accuracy = Metric('val_accuracy')
+    val_top5_accuracy = Metric('val_accuracy_top5')
 
     with tqdm(total=len(val_loader),
               desc='Validate Epoch  #{}'.format(epoch + 1),
@@ -148,14 +149,20 @@ def validate(epoch):
                 output = model(data)
 
                 val_loss.update(F.cross_entropy(output, target))
-                val_accuracy.update(accuracy(output, target))
+                topk_acc = accuracy_topk(output, target, (1, 5))
+                #train_accuracy.update(accuracy(output, target_batch))
+                val_accuracy.update(topk_acc[0])
+                val_top5_accuracy.update(topk_acc[1])
                 t.set_postfix({'loss': val_loss.avg.item(),
-                               'accuracy': 100. * val_accuracy.avg.item()})
+                               'accuracy': 100. * val_accuracy.avg.item(),
+                               'accuracy_top5': 100. * val_top5_accuracy.avg.item()},
+                               )
                 t.update(1)
 
     if log_writer:
         log_writer.add_scalar('val/loss', val_loss.avg, epoch)
         log_writer.add_scalar('val/accuracy', val_accuracy.avg, epoch)
+        log_writer.add_scalar('val/accuracy_top5', val_top5_accuracy.avg, epoch)
 
 
 # Horovod: using `lr = base_lr * hvd.size()` from the very beginning leads to worse final
@@ -189,7 +196,7 @@ def accuracy_topk(output, target, topk=(1,)):
 
     res = []
     for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
+        correct_k = correct[:k].reshape(-1).float().sum(dim=0, keepdim=True)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 

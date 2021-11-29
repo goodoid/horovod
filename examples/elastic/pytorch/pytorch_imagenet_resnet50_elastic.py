@@ -197,7 +197,7 @@ def accuracy_topk(output, target, topk=(1,)):
     res = []
     for k in topk:
         correct_k = correct[:k].reshape(-1).float().sum(dim=0, keepdim=True)
-        res.append(correct_k.mul_(100.0 / batch_size))
+        res.append((correct_k.mul_(100.0 / batch_size)).cpu().detach().numpy())
     return res
 
 

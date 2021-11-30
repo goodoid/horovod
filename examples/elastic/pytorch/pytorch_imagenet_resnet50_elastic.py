@@ -154,8 +154,8 @@ def validate(epoch):
                 val_accuracy.update(topk_acc[0])
                 val_top5_accuracy.update(topk_acc[1])
                 t.set_postfix({'loss': val_loss.avg.item(),
-                               'accuracy': 100. * val_accuracy.avg.item(),
-                               'accuracy_top5': 100. * val_top5_accuracy.avg.item()},
+                               'accuracy': val_accuracy.avg.item(),
+                               'accuracy_top5': val_top5_accuracy.avg.item()},
                                )
                 t.update(1)
 

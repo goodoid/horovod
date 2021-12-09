@@ -1,6 +1,7 @@
 import argparse
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
+import time
 import torch.optim as optim
 import torch.utils.data.distributed
 from torchvision import models
@@ -118,12 +119,13 @@ def run_benchmark(state):
     if state.iter == 0:
         log('Running benchmark...')
     for x in range(state.iter, args.num_iters):
+        lstart = time.time()
         time = timeit.timeit(lambda: benchmark_step(state), number=args.num_batches_per_iter)
         img_sec = args.batch_size * args.num_batches_per_iter / time
-        log('Iter #%d: %.1f img/sec per %s' % (x, img_sec, device))
         state.img_secs.append(img_sec)
         state.iter = x
         state.commit()
+        log('Iter #%d: %.1f img/sec per %s cost:%d' % (x, img_sec, device, time.time() - lstart))
 
 
 # adjust learning rate on reset
@@ -132,6 +134,7 @@ def on_state_reset():
         param_group['lr'] = lr * lr_scaler()
 
 
+start = time.time()
 state = hvd.elastic.TorchState(model, optimizer, img_secs=[], iter=0, batch=0, warm=False)
 state.register_reset_callbacks([on_state_reset])
 run_benchmark(state)
@@ -142,3 +145,4 @@ img_sec_conf = 1.96 * np.std(state.img_secs)
 log('Img/sec per %s: %.1f +-%.1f' % (device, img_sec_mean, img_sec_conf))
 log('Total img/sec on %d %s(s): %.1f +-%.1f' %
     (hvd.size(), device, hvd.size() * img_sec_mean, hvd.size() * img_sec_conf))
+log('time cost:%d'%(time.time() - start))

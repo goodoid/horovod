@@ -120,8 +120,8 @@ def run_benchmark(state):
         log('Running benchmark...')
     for x in range(state.iter, args.num_iters):
         lstart = time.time()
-        time = timeit.timeit(lambda: benchmark_step(state), number=args.num_batches_per_iter)
-        img_sec = args.batch_size * args.num_batches_per_iter / time
+        time_s = timeit.timeit(lambda: benchmark_step(state), number=args.num_batches_per_iter)
+        img_sec = args.batch_size * args.num_batches_per_iter / time_s
         state.img_secs.append(img_sec)
         state.iter = x
         state.commit()
